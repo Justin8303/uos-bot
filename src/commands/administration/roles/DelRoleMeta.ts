@@ -34,14 +34,11 @@ export const DelRoleMeta: Command = {
         let metaKey = interaction.options.get("meta-key", true).value?.toString() ?? "";
 
 
-        let meta = dbRole.meta;
-        delete meta[metaKey];
-        console.log(meta);
-        dbRole.update({
-            $set: {
-                meta: meta
-            }
-        })
+        let object = dbRole.toObject()
+        delete object.meta[metaKey];
+        dbRole.meta = object.meta;
+        dbRole.save();
+
 
         await interaction.followUp({
             embeds: [{

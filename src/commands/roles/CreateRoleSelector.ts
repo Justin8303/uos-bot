@@ -1,7 +1,12 @@
 import {Command} from "../../interfaces/ChatInputApplicationCommandData";
-import {ApplicationCommandOptionType, ApplicationCommandType, InteractionType} from "discord-api-types/v10";
+import {
+    ApplicationCommandOptionType,
+    ApplicationCommandType,
+    ButtonStyle,
+    InteractionType
+} from "discord-api-types/v10";
 import {BackendRole} from "../../../lib/database/entities/BackendRole";
-import {ActionRowBuilder, SelectMenuBuilder} from "discord.js";
+import {ActionRowBuilder, ButtonBuilder, SelectMenuBuilder} from "discord.js";
 import {BackendInteraction} from "../../../lib/database/entities/BackendInteraction";
 
 export const createRoleSelector: Command = {
@@ -46,32 +51,16 @@ export const createRoleSelector: Command = {
     run: async (client, interaction) => {
         if (!interaction.isChatInputCommand() || !interaction.inGuild()) return;
 
-        let metaKey = interaction.options.get("meta-key", true).value?.toString() ?? "";
-
-        let backendRoles = await BackendRole.find({
-            meta: {
-                [metaKey]: "true"
-            },
-            guild: interaction.guildId
-        })
-
-        if (backendRoles.length == 0) {
-            await interaction.followUp({content: "No dbrole found with matching parameters!"});
-            return;
-        }
-
-        let selectTitle = interaction.options.get("select-title", true).value?.toString() ?? "";
-
         let p = await BackendInteraction.createFromDiscord(interaction, "createRoleSelector");
-        let sel = await BackendInteraction.createFromDiscord(interaction, "createRoleSelector-select", p, true, InteractionType.MessageComponent);
+        let btn = await BackendInteraction.createFromDiscord(interaction, "createRoleSelector-button", p, true, InteractionType.MessageComponent);
 
-        const row = new ActionRowBuilder<SelectMenuBuilder>()
+        const row = new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
-                new SelectMenuBuilder()
-                    .setCustomId(sel.interactionId)
-                    .setPlaceholder(selectTitle)
-                    .setMinValues(1)
-                    .addOptions(backendRoles.map<any>(r => ({ label: r.displayName, value: r.snowflake })))
+                new ButtonBuilder()
+                    .setCustomId(btn.interactionId)
+                    .setEmoji("➕")
+                    .setLabel("Rolle hinzufügen")
+                    .setStyle(ButtonStyle.Primary)
             )
 
         await interaction.followUp({
@@ -81,7 +70,7 @@ export const createRoleSelector: Command = {
                 color: 5793266,
             }],
             components: [row],
-        });
+        })
     },
     autoComplete: async (client, interaction) => {
         const focusedOption = interaction.options.getFocused(true);
@@ -116,10 +105,54 @@ export const createRoleSelector: Command = {
             return;
 
 
+        if (dbInteraction.name === "createRoleSelector-button" && interaction.isRepliable()) {
+            let metaKey = parent.meta.options.find((x: any) => x.name === "meta-key").value?.toString() ?? "";
+            let backendRoles = await BackendRole.find({
+                meta: {
+                    [metaKey]: "true"
+                },
+                guild: interaction.guildId
+            })
+
+            if (backendRoles.length == 0) {
+                await interaction.followUp({content: "No dbrole found with matching parameters!"});
+                return;
+            }
+
+            let selectTitle = parent.meta.options.find((x: any) => x.name === "select-title").value?.toString() ?? "";
+
+            let sel = await BackendInteraction.createFromDiscord(interaction, "createRoleSelector-select", parent, true, InteractionType.MessageComponent);
+
+            const row = new ActionRowBuilder<SelectMenuBuilder>()
+                .addComponents(
+                    new SelectMenuBuilder()
+                        .setCustomId(sel.interactionId)
+                        .setPlaceholder(selectTitle)
+                        .setMinValues(1)
+                        .addOptions(backendRoles.map<any>(r => ({ label: r.displayName, value: r.snowflake })).sort((a, b) => {
+                            let x = a.label.toLowerCase();
+                            let y = b.label.toLowerCase();
+
+                            if (x > y) { return -1 }
+                            if (x < y) { return 1 }
+
+                            return 0;
+                        }))
+                )
+
+            await interaction.reply({
+                embeds: [{
+                    title: parent.meta.options.find((x: any) => x.name === "title").value?.toString() ?? "",
+                    description: parent.meta.options.find((x: any) => x.name === "text").value?.toString() ?? "",
+                    color: 5793266,
+                }],
+                components: [row],
+                ephemeral: true
+            });
+        }
 
         if (dbInteraction.name === "createRoleSelector-select") {
             if (interaction.isSelectMenu() && interaction.inGuild()) {
-                console.log("!");
                 let selected = interaction.values[0];
 
                 let dbRole = await BackendRole.getFromSnowflake(interaction.guildId, selected);
@@ -151,7 +184,15 @@ export const createRoleSelector: Command = {
                                 .setCustomId(sel.interactionId)
                                 .setPlaceholder("Rolle auswählen")
                                 .setMinValues(1)
-                                .addOptions(roles.map<any>(r => ({ label: r.displayName, value: r.snowflake })))
+                                .addOptions(roles.map<any>(r => ({ label: r.displayName, value: r.snowflake })).sort((a, b) => {
+                                    let x = a.label.toLowerCase();
+                                    let y = b.label.toLowerCase();
+
+                                    if (x > y) { return -1 }
+                                    if (x < y) { return 1 }
+
+                                    return 0;
+                                }))
                         )
 
                     let repl = {
@@ -163,7 +204,6 @@ export const createRoleSelector: Command = {
 
                 } else {
                     if (interaction.guild) {
-                        console.log("add role");
                         let role = await dbRole.getDiscordRole(interaction.guild);
 
                         if (!role) {

@@ -13,9 +13,6 @@ import {
 } from "discord.js";
 import {List} from "../commands/list";
 import {BackendInteraction} from "../../lib/database/entities/BackendInteraction";
-import {IBackendInteraction} from "../../lib/database/interfaces/interaction/IBackendInteraction";
-import {Query, Schema, Document} from "mongoose";
-import {IBackendInteractionMethods} from "../../lib/database/interfaces/interaction/IBackendInteractionMethods";
 
 export default (client: Client): void => {
     client.on("interactionCreate", async (interaction: Interaction) => {

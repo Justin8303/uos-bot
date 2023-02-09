@@ -63,6 +63,8 @@ schema.static("getFromDiscord", async function getFromDiscord(interaction: Inter
     let id = "";
     if (interaction.isAnySelectMenu()) {
         id = interaction.customId;
+    } else if (interaction.isButton()) {
+        id = interaction.customId;
     } else {
         id = interaction.id;
     }
