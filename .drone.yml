@@ -1,0 +1,121 @@
+---
+kind: pipeline
+type: docker
+name: uos-bot
+
+steps:
+  - name: install
+    image: docker.io/node:lts-alpine
+    commands:
+      - apk add --no-cache libc6-compat
+      - cd /app-build
+      - cp /drone/src/package.json ./
+      - cp /drone/src/yarn.lock ./
+      - npm install -g npm-cli-login
+      - npm-cli-login --config-path=.npmrc
+      - npm config set registry $NPM_REGISTRY
+      - npm config set always-auth true
+      - yarn install --frozen-lockfile
+      - cp -r /drone/src/* .
+    volumes:
+      - name: app-build-dir
+        path: /app-build
+    environment:
+      NPM_REGISTRY:
+        from_secret: ci_npm_registry
+      NPM_USER:
+        from_secret: ci_npm_registry_user
+      NPM_EMAIL:
+        from_secret: ci_npm_registry_email
+      NPM_PASS:
+        from_secret: ci_npm_registry_password
+
+  - name: build
+    image: docker.io/node:lts-alpine
+    commands:
+      - cd /app-build
+      - yarn build
+    volumes:
+      - name: app-build-dir
+        path: /app-build
+
+  - name: deploy
+    image: gcr.io/kaniko-project/executor:debug
+    commands:
+      - mkdir -p /kaniko/.docker
+      - echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(printf "%s:%s" "$CI_REGISTRY_USER" "$CI_REGISTRY_PASSWORD" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+      - cat /kaniko/.docker/config.json
+      - >
+        /kaniko/executor
+        --context /app-build
+        --dockerfile Dockerfile
+        --destination $CI_REGISTRY/drone-ci/$DRONE_REPO
+    volumes:
+      - name: app-build-dir
+        path: /app-build
+    environment:
+      CI_REGISTRY:
+        from_secret: ci_registry
+      CI_REGISTRY_USER:
+        from_secret: ci_registry_user
+      CI_REGISTRY_PASSWORD:
+        from_secret: ci_registry_password
+volumes:
+  - name: app-build-dir
+    temp: {}
+
+trigger:
+  branch:
+    - master
+    - main
+  event:
+    exclude:
+      - promote
+    include:
+      - push
+      - pull_request
+
+---
+
+kind: pipeline
+type: docker
+name: deploy
+
+steps:
+  - name: deploy
+    image: appleboy/drone-ssh
+    environment:
+      CI_REGISTRY:
+        from_secret: ci_registry
+    settings:
+      host:
+        from_secret: deploy_host
+      username: root
+      key:
+        from_secret: deploy_host_key
+      port: 22
+      command_timeout: 2m
+      envs:
+        - CI_REGISTRY
+        - HOST_DOMAIN
+      script:
+        - mkdir -p "/home/drone/${DRONE_REPO_NAMESPACE}/${DRONE_REPO_NAME}"
+        - cd /home/drone/${DRONE_REPO_NAMESPACE}/${DRONE_REPO_NAME}
+
+        - rm run.sh
+        - >
+          echo "
+            #!/bin/bash
+            cd /home/drone/${DRONE_REPO_NAMESPACE}/${DRONE_REPO_NAME}
+          
+            screen -dmS ${DRONE_REPO_NAMESPACE}-${DRONE_REPO_NAME} -- sh -c 'docker run --rm --env-file ${DRONE_REPO_NAME}-ci-service.env -it $${CI_REGISTRY}/drone-ci/${DRONE_REPO}:latest'
+          " > run.sh
+depends_on:
+  - uos-bot
+trigger:
+  event:
+    - promote
+    - push
+    - pull_request
+  branch:
+    - master
