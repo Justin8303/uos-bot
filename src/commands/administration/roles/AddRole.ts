@@ -1,7 +1,7 @@
-import {Command} from "../../interfaces/ChatInputApplicationCommandData";
+import {Command} from "../../../interfaces/ChatInputApplicationCommandData";
 import {ApplicationCommandOptionType, ApplicationCommandType, InteractionType} from "discord-api-types/v10";
-import {BackendRole} from "../../../lib/database/entities/BackendRole";
-import {addPadding} from "../../../lib/utils/stringManipulation";
+import {BackendRole} from "../../../../lib/database/entities/BackendRole";
+import {addPadding} from "../../../../lib/utils/stringManipulation";
 import {ObjectId} from "mongoose";
 
 export const AddRole: Command = {

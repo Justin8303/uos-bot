@@ -77,6 +77,13 @@ export const Info: Command = {
             })
         }
 
+        if (Object.keys(dbRole.meta).length > 0) {
+            fields.push({
+                name: "Metadata",
+                value: Object.keys(dbRole.meta).map(x => x + ": " + JSON.stringify(dbRole?.meta[x])).join("\n")
+            })
+        }
+
         await interaction.followUp({
             embeds: [{
                 title: `Info about Role ${dbRole.name}`,

@@ -1,6 +1,6 @@
-import {Command} from "../../interfaces/ChatInputApplicationCommandData";
+import {Command} from "../../../interfaces/ChatInputApplicationCommandData";
 import {ApplicationCommandOptionType, ApplicationCommandType} from "discord-api-types/v10";
-import {BackendRole} from "../../../lib/database/entities/BackendRole";
+import {BackendRole} from "../../../../lib/database/entities/BackendRole";
 
 export const DelRole: Command = {
     name: "delrole",

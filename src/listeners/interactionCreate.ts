@@ -12,16 +12,24 @@ import {
     UserContextMenuCommandInteraction
 } from "discord.js";
 import {List} from "../commands/list";
+import {BackendInteraction} from "../../lib/database/entities/BackendInteraction";
+import {IBackendInteraction} from "../../lib/database/interfaces/interaction/IBackendInteraction";
+import {Query, Schema, Document} from "mongoose";
+import {IBackendInteractionMethods} from "../../lib/database/interfaces/interaction/IBackendInteractionMethods";
 
 export default (client: Client): void => {
     client.on("interactionCreate", async (interaction: Interaction) => {
         if (interaction.isAutocomplete()) {
             await handleSlashAutocomplete(client, interaction);
+            return;
         }
 
         if (interaction.isCommand() || interaction.isContextMenuCommand()) {
             await handleSlashCommand(client, interaction);
+            return;
         }
+
+        await handleInteraction(client, interaction);
     });
 };
 
@@ -51,4 +59,29 @@ const handleSlashCommand = async (client: Client, interaction: ChatInputCommandI
     await interaction.deferReply();
 
     slashCommand.run(client, interaction);
+};
+
+const handleInteraction = async (client: Client, interaction: Interaction): Promise<void> => {
+    let dbInteraction = await BackendInteraction.getFromDiscord(interaction);
+
+    if (!dbInteraction)
+        return;
+
+    let pc = await dbInteraction.getParentCommand()
+    if (pc == null) {
+        return;
+    }
+
+    const slashCommand = List.find(c => c.name === pc?.meta.commandName);
+    if (!slashCommand) {
+        console.error(`No interaction handler matching ${dbInteraction.interactionId} was found.`);
+        return;
+    }
+
+    if (!slashCommand.handleInteraction) {
+        console.error(`Interaction ${dbInteraction.interactionId} has no interaction handler.`);
+        return;
+    }
+
+    slashCommand.handleInteraction(client, interaction);
 };

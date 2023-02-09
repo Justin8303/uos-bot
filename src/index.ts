@@ -14,6 +14,7 @@ dotenv.config();
 
 //init type overwrites
 import "../types/RoleExtend";
+import "../types/UserExtend";
 
 const client = new Client({
     intents: [
@@ -39,5 +40,3 @@ roleDelete(client);
 memerRoleUpdate(client);
 
 interactionCreate(client);
-
-console.log(client);

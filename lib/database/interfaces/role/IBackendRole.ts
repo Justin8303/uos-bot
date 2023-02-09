@@ -15,6 +15,7 @@ export interface IBackendRole {
     is_header: boolean
     is_category: boolean
     formatted: boolean
+    meta: { [key: string]: string }
 }
 
 export type IBackendRolePublic = IBackendRole & { _id: Types.ObjectId }

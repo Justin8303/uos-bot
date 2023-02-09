@@ -2,8 +2,9 @@ import {Schema} from "mongoose";
 import {IBackendChannel} from "../../interfaces/category/IBackendChannel";
 import {IBackendChannelMethods} from "../../interfaces/category/IBackendChannelMethods";
 import {Guild} from "discord.js";
+import {BackendChannelModel} from "../../models/BackendChannelModel";
 
-const schema = new Schema<IBackendChannel, IBackendChannelModel, IBackendChannelMethods>(
+const schema = new Schema<IBackendChannel, BackendChannelModel, IBackendChannelMethods>(
     {
         name: {
             type: String,

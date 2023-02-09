@@ -5,7 +5,7 @@ import {
     ChatInputApplicationCommandData,
     ChatInputCommandInteraction,
     Client,
-    ContextMenuCommandInteraction,
+    ContextMenuCommandInteraction, Interaction,
     MessageContextMenuCommandInteraction,
     ModalSubmitInteraction,
     SelectMenuInteraction,
@@ -15,4 +15,5 @@ import {
 export interface Command extends ChatInputApplicationCommandData {
     autoComplete?: (client: Client, interaction: AutocompleteInteraction<CacheType>) => void;
     run: (client: Client, interaction: ChatInputCommandInteraction<CacheType> | MessageContextMenuCommandInteraction<CacheType> | UserContextMenuCommandInteraction<CacheType> | (SelectMenuInteraction<CacheType> & ContextMenuCommandInteraction<CacheType>) | (ButtonInteraction<CacheType> & ContextMenuCommandInteraction<CacheType>) | (AutocompleteInteraction<CacheType> & ContextMenuCommandInteraction<CacheType>) | (ModalSubmitInteraction<CacheType> & ContextMenuCommandInteraction<CacheType>)) => void;
+    handleInteraction?: (client: Client, interaction: Interaction) => void;
 }

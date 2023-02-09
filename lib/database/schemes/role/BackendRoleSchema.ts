@@ -59,6 +59,11 @@ const schema = new Schema<IBackendRole, BackendRoleModel, IBackendRoleMethods>(
             type: Boolean,
             required: true,
             default: true
+        },
+        meta: {
+            type: Object,
+            required: false,
+            default: {}
         }
     }
 )
