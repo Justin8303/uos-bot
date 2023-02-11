@@ -112,7 +112,7 @@ steps:
             screen -dmS ${DRONE_REPO_NAMESPACE}-${DRONE_REPO_NAME} -- sh -c 'docker run --rm --env-file ${DRONE_REPO_NAME}-ci-service.env -it $${CI_REGISTRY}/drone-ci/${DRONE_REPO}:latest'
           " > run.sh
         - chmod +x run.sh
-        - run.sh
+        - sh run.sh
 depends_on:
   - uos-bot
 trigger:
