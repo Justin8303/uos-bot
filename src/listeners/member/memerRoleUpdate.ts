@@ -22,7 +22,7 @@ export default (client: Client): void => {
                 if (bParentRole != null && bParentRole.is_header == true) {
                     let usedHeaders = await bParentRole.getRoleUseHeader();
                     //we only search through roles that the user has
-                    let filteredUsedParents = usedHeaders.filter(x => newMember.roles.cache.has(x.snowflake));
+                    let filteredUsedParents = usedHeaders.filter(x => newMember.roles.cache.has(x.snowflake)).filter(x => !(Object.keys(x.meta).includes("autoremoval.disabled") && x.meta["autoremoval.disabled"] == "true"));
 
                     let dcRole = await bParentRole.getDiscordRole(newMember.guild);
                     if (filteredUsedParents.length == 0 && dcRole) {
@@ -37,7 +37,7 @@ export default (client: Client): void => {
                         if (newMember.roles.cache.some(x => x.id === role?.snowflake)) {
                             let usedCategories = await role.getRoleUseCategories();
                             //we only search through roles that the user has
-                            let filteredUsedRelated = usedCategories.filter(x => newMember.roles.cache.has(x.snowflake));
+                            let filteredUsedRelated = usedCategories.filter(x => newMember.roles.cache.has(x.snowflake)).filter(x => !(Object.keys(x.meta).includes("autoremoval.disabled") && x.meta["autoremoval.disabled"] == "true"));
 
                             let dcRole = await role.getDiscordRole(newMember.guild);
                             if (filteredUsedRelated.length == 0 && dcRole) {
