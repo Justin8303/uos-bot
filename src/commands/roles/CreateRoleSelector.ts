@@ -34,6 +34,12 @@ export const createRoleSelector: Command = {
             autocomplete: true
         },
         {
+            name: "button-text",
+            type: ApplicationCommandOptionType.String,
+            description: "Button text",
+            required: true
+        },
+        {
             name: "select-title",
             type: ApplicationCommandOptionType.String,
             description: "Select placeholder",
@@ -59,7 +65,7 @@ export const createRoleSelector: Command = {
                 new ButtonBuilder()
                     .setCustomId(btn.interactionId)
                     .setEmoji("➕")
-                    .setLabel("Rolle hinzufügen")
+                    .setLabel(interaction.options.get("button-text", true).value?.toString() ?? "")
                     .setStyle(ButtonStyle.Primary)
             )
 
@@ -141,11 +147,6 @@ export const createRoleSelector: Command = {
                 )
 
             await interaction.reply({
-                embeds: [{
-                    title: parent.meta.options.find((x: any) => x.name === "title").value?.toString() ?? "",
-                    description: parent.meta.options.find((x: any) => x.name === "text").value?.toString() ?? "",
-                    color: 5793266,
-                }],
                 components: [row],
                 ephemeral: true
             });
