@@ -38,7 +38,12 @@ export const SetRoleMeta: Command = {
         let metaKey = interaction.options.get("meta-key", true).value?.toString() ?? "";
         let metaVal = interaction.options.get("meta-value", true).value?.toString() ?? "";
 
-        dbRole.meta[metaKey] = metaVal;
+        let object = dbRole.toObject()
+        if (!object.meta)
+            object.meta = {}
+
+        object.meta[metaKey] = metaVal;
+        dbRole.meta = object.meta;
         dbRole.save();
 
         await interaction.followUp({

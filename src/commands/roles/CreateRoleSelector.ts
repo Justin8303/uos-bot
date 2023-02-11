@@ -115,7 +115,7 @@ export const createRoleSelector: Command = {
             })
 
             if (backendRoles.length == 0) {
-                await interaction.followUp({content: "No dbrole found with matching parameters!"});
+                await interaction.reply({content: "No dbrole found with matching parameters!", ephemeral: true});
                 return;
             }
 
@@ -158,7 +158,7 @@ export const createRoleSelector: Command = {
                 let dbRole = await BackendRole.getFromSnowflake(interaction.guildId, selected);
 
                 if (!dbRole) {
-                    await interaction.followUp({content: "No dbrole found with matching parameters!"});
+                    await interaction.reply({content: "No dbrole found with matching parameters!", ephemeral: true});
                     return;
                 }
 
